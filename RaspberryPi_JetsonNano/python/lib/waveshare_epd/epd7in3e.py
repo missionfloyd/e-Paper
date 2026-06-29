@@ -147,7 +147,7 @@ class EPD:
         self.send_command(0x61)                # TRES: RESOLUTION SETTING
         self.send_data(0x03, 0x20, 0x01, 0xE0) # [0x0320][0x01E0] -> displaysize
 
-        self.send_command(0x84)
+        self.send_command(0x82)
         self.send_data(0x01)
 
         self.send_command(0xE3) # PWS: POWER SAVING
@@ -187,10 +187,22 @@ class EPD:
         self.send_data2(image)
 
         self.TurnOnDisplay()
-        
-    def Clear(self, color=0x11):
+    
+    def displayPartial(self, image, x, y, w, h):
+        x_end = x + w - 1
+        y_end = y + h - 1
+        self.send_command(0x83)
+        self.send_data((x >> 8) & 0x03, x & 0xff, (x_end >> 8) & 0x03, x_end & 0xff,
+                       (y >> 8) & 0x03, y & 0xff, (y_end >> 8) & 0x03, y_end & 0xff, 0x01)
         self.send_command(0x10)
-        self.send_data2([color] * int(self.height) * int(self.width/2))
+        self.send_data(0x00)
+        self.send_data2(image)
+
+        self.TurnOnDisplay()
+        
+    def Clear(self, color=0x01):
+        self.send_command(0x10)
+        self.send_data2([color << 4 | color] * (self.height * self.width // 2))
 
         self.TurnOnDisplay()
 
